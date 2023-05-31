@@ -1,38 +1,93 @@
-import React from "react";
+import React, { useState } from "react";
 import GoogleMapReact from "google-map-react";
 import {
   Paper,
   Typography,
   useMediaQuery,
 } from "@material-ui/core";
-import { LocationOnOutlined } from "@material-ui/icons/LocationOnOutlined";
-import Rating from "@material-ui/lab";
+import LocationOnOutlinedIcon from "@material-ui/icons/LocationOnOutlined";
+import Rating from "@material-ui/lab/Rating";
 
 import useStyles from "./styles";
 
-const Map = () => {
+const Map = ({
+  setCoordinates,
+  setBounds,
+  coordinates,
+  places,
+  setChildClicked,
+}) => {
   const classes = useStyles();
-  const isMoobile = useMediaQuery(
+  const isDesktop = useMediaQuery(
     "(min-width:600px)"
   );
-  const coordinates = {
-    lat: 28.7041,
-    lng: 77.1025,
-  };
+  // const coordinates = {
+  //   lat: 28.7041,
+  //   lng: 77.1025,
+  // };
 
   return (
     <div className={classes.mapContainer}>
       <GoogleMapReact
         bootstrapURLKeys={{
-          key: "AIzaSyCsOknwVnGTa0Hp8Lb3AKdO20ZIcCUrV_4",
+          key: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
         }}
         defaultCenter={coordinates}
         center={coordinates}
         defaultZoom={10}
         margin={[50, 50, 50, 50]}
         options={""}
-        onChange={""}
-        onChildClick={""}></GoogleMapReact>
+        onChange={(e) => {
+          setCoordinates({
+            lat: e.center.lat,
+            lng: e.center.lng,
+          });
+          setBounds({
+            ne: e.marginBounds.ne,
+            sw: e.marginBounds.sw,
+          });
+        }}
+        onChildClick={(child) =>
+          setChildClicked(child)
+        }>
+        {places?.map((place, i) => (
+          <div
+            className={classes.markerContainer}
+            lat={Number(place.latitude)}
+            lng={Number(place.longitude)}
+            key={i}>
+            {!isDesktop ? (
+              <LocationOnOutlinedIcon color="primary" />
+            ) : (
+              <Paper
+                elevation={3}
+                className={classes.paper}>
+                <Typography
+                  className={classes.typography}
+                  variant="subtitle2"
+                  gutterBottom>
+                  {place.name}
+                </Typography>
+                <img
+                  className={classes.pointer}
+                  src={
+                    place.photo
+                      ? place.photo.images.large
+                          .url
+                      : "https://img.freepik.com/premium-photo/sorry-closed-sign-shop-door-text-cafe-front-restaurant-hang-door-entrance-vintage-tone-style_109549-2067.jpg"
+                  }
+                  alt={place.name}
+                />
+                <Rating
+                  size="small"
+                  value={Number(place.rating)}
+                  readOnly
+                />
+              </Paper>
+            )}
+          </div>
+        ))}
+      </GoogleMapReact>
     </div>
   );
 };
